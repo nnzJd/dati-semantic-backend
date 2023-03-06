@@ -58,7 +58,7 @@ dependencies {
     }
     testImplementation 'io.rest-assured:rest-assured:4.0.0'
     testImplementation 'io.rest-assured:json-path:4.0.0'
-    testImplementation 'org.mockito:mockito-inline:3.9.0'
+    testImplementation 'org.mockito:mockito-inline:5.1.1'
 
     integrationImplementation "org.testcontainers:elasticsearch:1.16.2"
     integrationImplementation "org.testcontainers:testcontainers:1.16.2"
