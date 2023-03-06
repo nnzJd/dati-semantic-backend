@@ -43,7 +43,7 @@ dependencies {
 
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.1'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.1'
-    implementation 'io.swagger:swagger-annotations:1.5.20'
+    implementation 'io.swagger:swagger-annotations:1.6.9'
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
 
     runtimeOnly 'mysql:mysql-connector-java:8.0.28'
