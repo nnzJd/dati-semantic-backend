@@ -44,4 +44,19 @@ class HarvestRepositoryProcessorTest {
         verify(harvesterService).harvest("repo1");
         verify(harvesterService).harvest("repo2");
     }
+    
+    
+    @Test
+    void shouldHarvestContinueIfDeleteUnprocessedReposFail() throws Exception {
+        HarvesterService harvesterService = mock(HarvesterService.class);
+        List<String> reposToHarvest = List.of("repo1");
+        
+        doThrow(new RuntimeException()).when(harvesterService).deleteUnprocessingRepos(any());
+        
+        HarvestRepositoryProcessor harvesterJob = new HarvestRepositoryProcessor(harvesterService, reposToHarvest, Boolean.TRUE);
+        harvesterJob.execute(mock(StepContribution.class), mock(ChunkContext.class));
+        assertThrows(RuntimeException.class, () -> harvesterService.deleteUnprocessingRepos(reposToHarvest));
+        verify(harvesterService).harvest("repo1");
+
+    }
 }

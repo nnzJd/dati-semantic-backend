@@ -1,7 +1,7 @@
 package it.gov.innovazione.ndc.harvester;
 
-import it.gov.innovazione.ndc.repository.TripleStoreRepository;
 import it.gov.innovazione.ndc.repository.SemanticAssetMetadataRepository;
+import it.gov.innovazione.ndc.repository.TripleStoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -18,6 +20,7 @@ public class HarvesterService {
     private final List<SemanticAssetHarvester> semanticAssetHarvesters;
     private final TripleStoreRepository tripleStoreRepository;
     private final SemanticAssetMetadataRepository semanticAssetMetadataRepository;
+    private static final String GRAPH_NAME_MATCHER = "github.com";
 
     public void harvest(String repoUrl) throws IOException {
         log.info("Processing repo {}", repoUrl);
@@ -48,6 +51,37 @@ public class HarvesterService {
         } catch (Exception e) {
             log.error("Error while clearing {}", repoUrl, e);
             throw e;
+        }
+    }
+
+    public void deleteUnprocessingRepos(List<String> processingRepos) {
+        if (!processingRepos.isEmpty()) {
+            List<String> normalisedRepoUrls = processingRepos
+                    .stream()
+                    .map(s -> normaliseRepoUrl(s.trim().toLowerCase()))
+                    .collect(Collectors.toList());
+
+
+            List<String> storedGraphs = tripleStoreRepository.getStoredGraphsName();
+
+            if (Objects.nonNull(storedGraphs) && !storedGraphs.isEmpty()) {
+                List<String> filteredGraphs = storedGraphs
+                        .stream()
+                        .filter(s -> s.contains(GRAPH_NAME_MATCHER))
+                        .filter(s -> !normalisedRepoUrls.contains(s.trim().toLowerCase()))
+                        .collect(Collectors.toList());
+                log.info("Found {} stored graphs not processed by this harvester.", filteredGraphs.size());
+                if (!filteredGraphs.isEmpty()) {
+                    for (String repoUrl : filteredGraphs) {
+                        try {
+                            clearRepo(repoUrl);
+                        } catch (Exception e) {
+                            log.error("Could not clear unprocessed named graph {}. Skip this step.", repoUrl, e);
+                        }
+
+                    }
+                }
+            }
         }
     }
 

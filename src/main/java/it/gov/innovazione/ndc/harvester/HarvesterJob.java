@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
@@ -48,10 +49,10 @@ public class HarvesterJob {
 
     @Scheduled(cron = "0 0 22 ? * *")
     public void harvest() {
-        harvest(repositories);
+        harvest(repositories, Boolean.TRUE);
     }
 
-    public void harvest(String repositories) {
+    public void harvest(String repositories, Boolean harvestingEnvRepositories) {
         try {
             LocalDateTime now = LocalDateTime.now(clock);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:00");
@@ -60,6 +61,7 @@ public class HarvesterJob {
             JobParameters jobParameters = new JobParametersBuilder()
                     .addString("harvestTime", currentDateTime)
                     .addString("repositories", repositories)
+                    .addString("envRepositories", Objects.nonNull(harvestingEnvRepositories) ? String.valueOf(harvestingEnvRepositories.booleanValue()) : String.valueOf(Boolean.FALSE.booleanValue()))
                     .toJobParameters();
             jobLauncher.run(harvestSemanticAssetsJob, jobParameters);
         } catch (Exception e) {

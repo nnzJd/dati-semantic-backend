@@ -3,13 +3,21 @@ package it.gov.innovazione.ndc.repository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.HttpClient;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
+
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.sparql.modify.request.UpdateDrop;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Repository
@@ -35,7 +43,7 @@ public class TripleStoreRepository {
         } catch (Exception e) {
             log.error("Could not flush!", e);
             throw new TripleStoreRepositoryException(
-                String.format("Could not save model to '%s'", graphName), e);
+                    String.format("Could not save model to '%s'", graphName), e);
         }
     }
 
@@ -44,12 +52,12 @@ public class TripleStoreRepository {
             String sparqlEndpoint = virtuosoClient.getSparqlEndpoint();
             HttpClient httpClient = virtuosoClient.getHttpClient();
             UpdateExecutionFactory.createRemote(new UpdateDrop(repoUrl, true), sparqlEndpoint,
-                    httpClient)
-                .execute();
+                            httpClient)
+                    .execute();
         } catch (Exception e) {
             log.error(String.format("Could not clear existing named graph! - %s", repoUrl), e);
             throw new TripleStoreRepositoryException(
-                String.format("Could not delete graph - '%s'", repoUrl), e);
+                    String.format("Could not delete graph - '%s'", repoUrl), e);
         }
     }
 
@@ -60,7 +68,34 @@ public class TripleStoreRepository {
         } catch (Exception e) {
             log.error(String.format("Could not execute select! - %s", selectBuilder), e);
             throw new TripleStoreRepositoryException(
-                String.format("Could not execute select - '%s'", selectBuilder), e);
+                    String.format("Could not execute select - '%s'", selectBuilder), e);
+        }
+    }
+
+    public List<String> getStoredGraphsName() {
+        log.info("Looking for stored graphs name from Virtuoso");
+        try (RDFConnection connection = virtuosoClient.getConnection()) {
+            return getStoredGraphsNameWithConnection(connection);
+        }
+    }
+
+    private List<String> getStoredGraphsNameWithConnection(RDFConnection connection) {
+        Query query = QueryFactory.create("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }");
+        try (QueryExecution queryExecution = connection.query(query)) {
+            ResultSet resultSet = queryExecution.execSelect();
+            List<String> graphNames = new ArrayList<>();
+            if (Objects.nonNull(resultSet)) {
+                while (resultSet.hasNext()) {
+                    QuerySolution solution = resultSet.next();
+                    String graphName = solution.get("g").toString();
+                    graphNames.add(graphName);
+                }
+            }
+            return graphNames;
+        } catch (Exception e) {
+            log.error(String.format("Could not execute select! - %s", query.toString()), e);
+            throw new TripleStoreRepositoryException(
+                    String.format("Could not execute select - '%s'", query.toString()), e);
         }
     }
 }

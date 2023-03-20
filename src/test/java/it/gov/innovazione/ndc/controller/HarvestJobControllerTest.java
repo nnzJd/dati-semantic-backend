@@ -56,7 +56,7 @@ class HarvestJobControllerTest {
     void shouldStartHarvestForSpecifiedRepositories() throws IOException {
         String repoUrls = "http://github.com/repo,http://github.com/repo2";
         harvestJobController.harvestRepositories(repoUrls);
-        verify(harvesterJob).harvest(repoUrls);
+        verify(harvesterJob).harvest(repoUrls, Boolean.FALSE);
     }
 
     @Test

@@ -43,7 +43,7 @@ public class HarvestJobController {
 
     @PostMapping("jobs/harvest/repositories")
     public void harvestRepositories(@RequestParam("repo_urls") String repoUrl) {
-        harvesterJob.harvest(repoUrl);
+        harvesterJob.harvest(repoUrl, Boolean.FALSE);
     }
 
     @PostMapping("jobs/clear")

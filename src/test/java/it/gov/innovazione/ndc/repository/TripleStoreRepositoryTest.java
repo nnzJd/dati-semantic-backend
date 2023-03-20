@@ -15,6 +15,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdfconnection.RDFConnection;
@@ -42,7 +43,9 @@ class TripleStoreRepositoryTest {
     HttpClient httpClient;
     @Mock
     VirtuosoClient virtuosoClient;
-
+    @Mock
+    QueryExecution queryExecution;
+    
     @InjectMocks
     TripleStoreRepository tripleStoreRepository;
 
@@ -131,6 +134,32 @@ class TripleStoreRepositoryTest {
         verify(virtuosoClient).getConnection();
         verify(connection).query(selectBuilder.build());
     }
+    
+    @Test
+    void shouldRetrieveStoredGraphsName() {
+        when(virtuosoClient.getConnection()).thenReturn(connection);
+        when(connection.query(any(Query.class))).thenReturn(queryExecution);
+        
+        tripleStoreRepository.getStoredGraphsName();
+        
+        verify(virtuosoClient).getConnection();
+        verify(connection).query(any(Query.class));
+    }
+    
+    @Test
+    void shouldThrowWhenRetrieveStoredGraphsNameFails() {
+        when(virtuosoClient.getConnection()).thenReturn(connection);
+        when(connection.query(any(Query.class))).thenThrow(
+            new HttpException("Something bad happened"));
+
+        assertThatThrownBy(() -> tripleStoreRepository.getStoredGraphsName())
+            .isInstanceOf(TripleStoreRepositoryException.class);
+
+        verify(virtuosoClient).getConnection();
+        verify(connection).query(any(Query.class));
+    }
+    
+    
 
     private MockedStatic<UpdateExecutionFactory> mockUpdateFactory() {
         MockedStatic<UpdateExecutionFactory> mockedStatic =

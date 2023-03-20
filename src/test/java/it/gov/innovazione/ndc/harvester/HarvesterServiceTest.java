@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -80,6 +81,38 @@ public class HarvesterServiceTest {
         order.verify(metadataRepository).deleteByRepoUrl(repoUrl);
         order.verify(harvester).harvest(repoUrl, clonedRepoPath);
     }
+    
+    @Test
+    void shouldClearUnprocessedRepoBeforeProcessingData() throws IOException {
+        String repoUrl = "someRepoUri";
+        String otherRepoUrl = "github.com/anotherRepoUrl";
+
+        when(tripleStoreRepository.getStoredGraphsName()).thenReturn(Arrays.asList(otherRepoUrl));
+
+        harvesterService.deleteUnprocessingRepos(Arrays.asList(repoUrl));
+
+        InOrder order = inOrder(harvester, tripleStoreRepository, metadataRepository, harvester);
+        order.verify(harvester).cleanUpBeforeHarvesting(otherRepoUrl);
+        order.verify(tripleStoreRepository).clearExistingNamedGraph(otherRepoUrl);
+        order.verify(metadataRepository).deleteByRepoUrl(otherRepoUrl);
+    }
+    
+    
+    @Test
+    void shouldContinueWhenDeleteUnprocessingReposFail() throws IOException {
+        String repoUrl = "someRepoUri";
+        String otherRepoUrl = "github.com/anotherRepoUrl";
+
+        when(tripleStoreRepository.getStoredGraphsName()).thenReturn(Arrays.asList(otherRepoUrl));
+
+        harvesterService.deleteUnprocessingRepos(Arrays.asList(repoUrl));
+
+        InOrder order = inOrder(harvester, tripleStoreRepository, metadataRepository, harvester);
+        order.verify(harvester).cleanUpBeforeHarvesting(otherRepoUrl);
+        order.verify(tripleStoreRepository).clearExistingNamedGraph(otherRepoUrl);
+        order.verify(metadataRepository).deleteByRepoUrl(otherRepoUrl);
+    }
+
 
     @Test
     void shouldCleanUpTemporaryFolderWithRepoAfterProcessing() throws IOException {
