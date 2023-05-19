@@ -23,8 +23,27 @@ public class NodeExtractor {
             .orElseThrow(() -> invalidModelException(resource, property));
     }
 
+    /*
+     * validation methods
+     */
+    public static Resource requireNode(Resource resource, Property property, List<ErrorValidatorMessage> errors, String fieldName) {
+        try {
+            return requireNode(resource, property);
+        } catch (InvalidModelException e) {
+            errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
+            return null;
+        }
+    }
+
     public static Resource extractNode(Resource resource, Property property) {
         return extractMaybeNode(resource, property).orElse(null);
+    }
+
+    /*
+     * validation methods
+     */
+    public static Resource extractNode(Resource resource, Property property, List<WarningValidatorMessage> warnings, String fieldName) {
+        return extractMaybeNodes(resource, property, warnings, fieldName).stream().findFirst().orElse(null);
     }
 
     public static List<Resource> requireNodes(Resource resource, Property property) {
@@ -41,10 +60,34 @@ public class NodeExtractor {
         }
     }
 
+    /*
+     * validation methods
+     */
+    public static List<Resource> requireNodes(Resource resource, Property property, List<ErrorValidatorMessage> errors, String fieldName) {
+        try {
+            return requireNodes(resource, property);
+        } catch (InvalidModelException e) {
+            errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
+            return List.of();
+        }
+    }
+
     public static List<Resource> extractMaybeNodes(Resource resource, Property property) {
         try {
             return requireNodes(resource, property);
         } catch (InvalidModelException e) {
+            return List.of();
+        }
+    }
+
+    /*
+     * validation methods
+     */
+    public static List<Resource> extractMaybeNodes(Resource resource, Property property, List<WarningValidatorMessage> warnings, String fieldName) {
+        try {
+            return requireNodes(resource, property);
+        } catch (InvalidModelException e) {
+            warnings.add(new WarningValidatorMessage(fieldName, e.getMessage()));
             return List.of();
         }
     }
@@ -54,44 +97,15 @@ public class NodeExtractor {
                 .stream().findFirst();
     }
 
+
     public static InvalidModelException invalidModelException(Resource resource,
                                                                Property property) {
         return new InvalidModelException(
             format("Cannot find node '%s' for resource '%s'", property, resource));
     }
-    
-    /*
-     * validation methods
-     */
-    public static List<Resource> requireNodes(Resource resource, Property property,List<ErrorValidatorMessage> errors, String fieldName) {
-    	 try {
-             return requireNodes(resource, property);
-         } catch (InvalidModelException e) {
-             errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
-             return List.of();
-         }
-    }
-    
-    public static Resource requireNode(Resource resource, Property property, List<ErrorValidatorMessage> errors, String fieldName) {
-    	 try {
-             return requireNode(resource, property);
-         } catch (InvalidModelException e) {
-             errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
-             return null;
-         }
-    }
-    
-    public static List<Resource> extractMaybeNodes(Resource resource, Property property, List<WarningValidatorMessage> warnings, String fieldName) {
-        try {
-            return requireNodes(resource, property);
-        } catch (InvalidModelException e) {
-        	warnings.add(new WarningValidatorMessage(fieldName, e.getMessage()));
-            return List.of();
-        }
-    }
-    
-    public static Resource extractNode(Resource resource, Property property, List<WarningValidatorMessage> warnings, String fieldName) {
-    	return extractMaybeNodes(resource, property,warnings, fieldName).stream().findFirst().orElse(null);
-    }
+
+
+
+
     
 }

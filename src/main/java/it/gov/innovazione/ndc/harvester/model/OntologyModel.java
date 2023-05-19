@@ -56,23 +56,23 @@ public class OntologyModel extends BaseSemanticAssetModel {
             errors.add(new ErrorValidatorMessage(null, ex.getMessage()));
             return;
         }
-        getDistributions(errors, warnings ,SemanticAssetMetadata.Fields.distributions);
+        getDistributions(errors, warnings, SemanticAssetMetadata.Fields.distributions);
         getKeyClasses(warnings, SemanticAssetMetadata.Fields.keyClasses);
         LiteralExtractor.extractOptional(getMainResource(), Admsapit.prefix, warnings, SemanticAssetMetadata.Fields.prefix);
         NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.semanticAssetInUse,
                 createProperty("https://w3id.org/italia/onto/l0/name"), warnings, SemanticAssetMetadata.Fields.projects);
     }
 
-	private List<NodeSummary> getKeyClasses() {
+    private List<NodeSummary> getKeyClasses() {
         return NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.hasKeyClass, RDFS.label);
-    }
-
-    protected List<Distribution> getDistributions() {
-        return extractDistributionsFilteredByFormat(hasSemanticAssetDistribution, FILE_TYPE_RDF_TURTLE);
     }
 
     private List<NodeSummary> getKeyClasses(List<WarningValidatorMessage> warnings, String fieldName) {
         return NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.hasKeyClass, RDFS.label, warnings, fieldName);
+    }
+
+    protected List<Distribution> getDistributions() {
+        return extractDistributionsFilteredByFormat(hasSemanticAssetDistribution, FILE_TYPE_RDF_TURTLE);
     }
 
     private List<Distribution> getDistributions(List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings, String fieldName) {

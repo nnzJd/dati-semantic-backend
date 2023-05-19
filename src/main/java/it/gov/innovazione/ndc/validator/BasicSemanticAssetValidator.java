@@ -13,25 +13,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public abstract class BasicSemanticAssetValidator<M extends BaseSemanticAssetModel> implements SemanticAssetValidator {
 
-	private final SemanticAssetType type;
+    private final SemanticAssetType type;
 
-	@Override
-	public SemanticAssetType getType() {
-		return type;
-	}
+    @Override
+    public SemanticAssetType getType() {
+        return type;
+    }
 
-	@Override
-	public ValidationResultDto validate(Model resource) {
-		M model = getValidatorModel(resource);
+    @Override
+    public ValidationResultDto validate(Model resource) {
+        M model = getValidatorModel(resource);
 
-		List<ErrorValidatorMessage> errors = new ArrayList<>();
-		List<WarningValidatorMessage> warnings = new ArrayList<>();
+        List<ErrorValidatorMessage> errors = new ArrayList<>();
+        List<WarningValidatorMessage> warnings = new ArrayList<>();
 
-		model.validateMetadata(errors, warnings);
+        model.validateMetadata(errors, warnings);
 
-		return new ValidationResultDto(errors,warnings);
-	}
+        return new ValidationResultDto(errors, warnings);
+    }
 
-	protected abstract M getValidatorModel(Model rdfModel);
+    protected abstract M getValidatorModel(Model rdfModel);
 
 }

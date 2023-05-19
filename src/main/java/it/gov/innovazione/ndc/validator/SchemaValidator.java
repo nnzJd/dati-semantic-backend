@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class SchemaValidator extends BasicSemanticAssetValidator<SchemaModel> {
 
-	public SchemaValidator() {
-		super(SemanticAssetType.SCHEMA);
-	}
+    public SchemaValidator() {
+        super(SemanticAssetType.SCHEMA);
+    }
 
-	@Override
-	protected SchemaModel getValidatorModel(Model rdfModel) {
-		return new SchemaModel(rdfModel, null, null);
-	}
+    @Override
+    protected SchemaModel getValidatorModel(Model rdfModel) {
+        return new SchemaModel(rdfModel, null, null);
+    }
 }

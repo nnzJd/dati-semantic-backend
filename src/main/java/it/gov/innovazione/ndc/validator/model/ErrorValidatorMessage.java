@@ -7,8 +7,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class ErrorValidatorMessage {
 
-	private String fieldName;
+    private String fieldName;
 
-	private String message;
+    private String message;
 
 }

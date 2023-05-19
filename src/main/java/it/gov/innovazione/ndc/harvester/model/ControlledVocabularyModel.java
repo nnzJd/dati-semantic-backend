@@ -62,6 +62,15 @@ public class ControlledVocabularyModel extends BaseSemanticAssetModel {
         return keyConcept;
     }
 
+    private String getKeyConcept(List<ErrorValidatorMessage> errors, String fieldName) {
+        try {
+            return getKeyConcept();
+        } catch (InvalidModelException e) {
+            errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
+            return null;
+        }
+    }
+
     private void validateKeyConcept(String keyConcept, Resource mainResource) {
         if (!keyConcept.matches(KEY_CONCEPT_VALIDATION_PATTERN)) {
             log.warn("Key concept string ({}) invalid for controlled vocabulary '{}'",
@@ -85,6 +94,15 @@ public class ControlledVocabularyModel extends BaseSemanticAssetModel {
             throw new InvalidModelException(format("Cannot find required id (%s) for rightsHolder '%s'", DCTerms.identifier, rightsHolderIri));
         }
         return idProperty.getString();
+    }
+
+    private String getAgencyId(List<ErrorValidatorMessage> errors, String fieldName) {
+        try {
+            return getAgencyId();
+        } catch (InvalidModelException e) {
+            errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
+            return null;
+        }
     }
 
     public void addNdcDataServiceProperties(String baseUrl) {
@@ -141,29 +159,12 @@ public class ControlledVocabularyModel extends BaseSemanticAssetModel {
         getAgencyId(errors, SemanticAssetMetadata.Fields.agencyId);
     }
 
-	protected List<Distribution> getDistributions() {
+    protected List<Distribution> getDistributions() {
         return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_RDF_TURTLE);
     }
-	
-	private List<Distribution> getDistributions(List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings, String fieldName) {
+    
+    private List<Distribution> getDistributions(List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings, String fieldName) {
         return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_RDF_TURTLE, errors, warnings, fieldName);
     }
-	
-	private String getKeyConcept(List<ErrorValidatorMessage> errors, String fieldName) {
-		try {
-			return getKeyConcept();
-		} catch (InvalidModelException e) {
-			errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
-			return null;
-		}
-	}
-	
-	private String getAgencyId(List<ErrorValidatorMessage> errors, String fieldName) {
-		try {
-			return getAgencyId();
-		} catch (InvalidModelException e) {
-			errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
-			return null;
-		}
-	}
+
 }

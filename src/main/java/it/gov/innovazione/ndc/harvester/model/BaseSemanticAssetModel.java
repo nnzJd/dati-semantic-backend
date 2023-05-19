@@ -94,7 +94,7 @@ public abstract class BaseSemanticAssetModel implements SemanticAssetModel {
 
         if (resources.isEmpty()) {
             throw new InvalidModelException(
-                format("No statement for a node whose type is '%s' in '%s'", typeIri, StringUtils.hasLength(source) ? source : "provided file" ));
+                format("No statement for a node whose type is '%s' in '%s'", typeIri, StringUtils.hasLength(source) ? source : "provided file"));
         }
         throw new InvalidModelException(
             format(
@@ -132,7 +132,7 @@ public abstract class BaseSemanticAssetModel implements SemanticAssetModel {
      */
     public void validateMetadata(List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings) {
         Resource mainResource = getMainResource();
-        NodeSummaryExtractor.extractRequiredNodeSummary(mainResource, rightsHolder, FOAF.name,errors,warnings, SemanticAssetMetadata.Fields.rightsHolder);
+        NodeSummaryExtractor.extractRequiredNodeSummary(mainResource, rightsHolder, FOAF.name, errors, warnings, SemanticAssetMetadata.Fields.rightsHolder);
         LiteralExtractor.extract(mainResource, title, errors, SemanticAssetMetadata.Fields.title);
         LiteralExtractor.extract(mainResource, description, errors, SemanticAssetMetadata.Fields.description);
         LiteralExtractor.extract(mainResource, modified, errors, SemanticAssetMetadata.Fields.modifiedOn);
@@ -146,7 +146,7 @@ public abstract class BaseSemanticAssetModel implements SemanticAssetModel {
         LiteralExtractor.extractOptional(mainResource, issued, warnings, SemanticAssetMetadata.Fields.issuedOn);
         NodeExtractor.extractMaybeNodes(mainResource, language, warnings, SemanticAssetMetadata.Fields.languages);
         LiteralExtractor.extractAll(mainResource, keyword, warnings, SemanticAssetMetadata.Fields.keywords);
-        LiteralExtractor.extractOptional(mainResource, temporal,warnings, SemanticAssetMetadata.Fields.temporal);
+        LiteralExtractor.extractOptional(mainResource, temporal, warnings, SemanticAssetMetadata.Fields.temporal);
         NodeSummaryExtractor.maybeNodeSummaries(mainResource, conformsTo, FOAF.name, warnings, SemanticAssetMetadata.Fields.conformsTo);
     }
 
@@ -205,6 +205,19 @@ public abstract class BaseSemanticAssetModel implements SemanticAssetModel {
         return Distribution.builder().accessUrl(accessUrl).downloadUrl(downloadUrl).build();
     }
 
+    private Distribution buildDistribution(Resource distNode, List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings,  String fieldName) {
+        String downloadUrl = extractMaybePropertyValue(distNode, downloadURL);
+        if (Objects.isNull(downloadUrl)) {
+            errors.add(new ErrorValidatorMessage(fieldName, String.format("Invalid distribution '%s': missing %s property",
+                    distNode.getURI(), downloadURL)));
+        }
+        String accessUrl = extractMaybePropertyValue(distNode, accessURL);
+        if (Objects.isNull(accessUrl)) {
+            warnings.add(new WarningValidatorMessage(fieldName, String.format("Cannot find node '%s' for resource '%s'", accessURL, distNode)));
+        }
+        return Distribution.builder().accessUrl(accessUrl).downloadUrl(downloadUrl).build();
+    }
+
     private String extractMaybePropertyValue(Resource distNode, Property property) {
         Statement statement = distNode.getProperty(property);
         return Objects.nonNull(statement) ? statement.getResource().getURI() : null;
@@ -221,38 +234,27 @@ public abstract class BaseSemanticAssetModel implements SemanticAssetModel {
             .map(this::buildDistribution)
             .collect(Collectors.toList());
     }
-	protected List<Distribution> extractDistributionsFilteredByFormat(Property distributionProperty,
-		Property formatPropertyValue, List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings, String fieldName) {
-		
-		try {
+
+    protected List<Distribution> extractDistributionsFilteredByFormat(Property distributionProperty,
+                                                                      Property formatPropertyValue, List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings, String fieldName) {
+        
+        try {
             var formatFiltered = NodeExtractor.requireNodes(getMainResource(), distributionProperty).stream()
                     .filter(dist -> distributionHasFormat(dist, formatPropertyValue))
                     .collect(Collectors.toList());
 
-            if(formatFiltered.isEmpty()){
+            if (formatFiltered.isEmpty()) {
                 warnings.add(new WarningValidatorMessage(fieldName, String.format("Cannot find any distribution with format '%s'", formatPropertyValue)));
             }
 
-			return formatFiltered.stream()
-					.map(dist -> buildDistribution(dist, errors, warnings, fieldName))
-					.collect(Collectors.toList());
+            return formatFiltered.stream()
+                    .map(dist -> buildDistribution(dist, errors, warnings, fieldName))
+                    .collect(Collectors.toList());
 
-		} catch (InvalidModelException e) {
-			errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
-			return emptyList();
-		}
-	}
-
-    private Distribution buildDistribution(Resource distNode, List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings,  String fieldName) {
-        String downloadUrl = extractMaybePropertyValue(distNode, downloadURL);
-        if (Objects.isNull(downloadUrl)) {
-        	errors.add(new ErrorValidatorMessage(fieldName, String.format("Invalid distribution '%s': missing %s property",
-                    distNode.getURI(), downloadURL)));
+        } catch (InvalidModelException e) {
+            errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
+            return emptyList();
         }
-        String accessUrl = extractMaybePropertyValue(distNode, accessURL);
-        if (Objects.isNull(accessUrl)) {
-            warnings.add(new WarningValidatorMessage(fieldName, String.format("Cannot find node '%s' for resource '%s'", accessURL, distNode)));
-        }
-        return Distribution.builder().accessUrl(accessUrl).downloadUrl(downloadUrl).build();
     }
+
 }

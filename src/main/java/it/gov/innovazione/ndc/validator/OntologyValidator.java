@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class OntologyValidator extends BasicSemanticAssetValidator<OntologyModel> {
 
-	public OntologyValidator() {
-		super(SemanticAssetType.ONTOLOGY);
-	}
+    public OntologyValidator() {
+        super(SemanticAssetType.ONTOLOGY);
+    }
 
-	@Override
-	protected OntologyModel getValidatorModel(Model rdfModel) {
-		return new OntologyModel(rdfModel, null, null);
-	}
+    @Override
+    protected OntologyModel getValidatorModel(Model rdfModel) {
+        return new OntologyModel(rdfModel, null, null);
+    }
 }

@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class ControlledVocabularyValidator extends BasicSemanticAssetValidator<ControlledVocabularyModel> {
 
-	public ControlledVocabularyValidator() {
-		super(SemanticAssetType.CONTROLLED_VOCABULARY);
-	}
+    public ControlledVocabularyValidator() {
+        super(SemanticAssetType.CONTROLLED_VOCABULARY);
+    }
 
-	@Override
-	protected ControlledVocabularyModel getValidatorModel(Model rdfModel) {
-		return new ControlledVocabularyModel(rdfModel, null, null);
-	}
+    @Override
+    protected ControlledVocabularyModel getValidatorModel(Model rdfModel) {
+        return new ControlledVocabularyModel(rdfModel, null, null);
+    }
 }

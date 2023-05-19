@@ -42,11 +42,11 @@ public class ValidationService {
                 .findFirst()
                 .orElseThrow(() -> new InvalidSemanticAssetException(String.format("Invalid semantic asset type: %s", assetType)));
 
-        try (InputStream i = file.getInputStream()){
+        try (InputStream i = file.getInputStream()) {
             Model model = ModelFactory.createDefaultModel();
-            RDFDataMgr.read(model,i, Lang.TURTLE);
+            RDFDataMgr.read(model, i, Lang.TURTLE);
 
-           return semanticAssetValidator.validate(model);
+            return semanticAssetValidator.validate(model);
 
         } catch (IOException e) {
             log.error("Error during validation on file", e);

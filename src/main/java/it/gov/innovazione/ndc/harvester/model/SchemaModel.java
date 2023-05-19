@@ -67,40 +67,46 @@ public class SchemaModel extends BaseSemanticAssetModel {
      * Use the same methods of extract Metadata. Instead to throw exceptions, it add the error inside the collection.
      */
     @Override
-	public void validateMetadata(List<ErrorValidatorMessage> errors,
-			List<WarningValidatorMessage> warnings) {
-    	    Resource mainResource = null;
-		try {
-			mainResource = getMainResource();
-		} catch (InvalidModelException ex) {
-			errors.add(new ErrorValidatorMessage(null, ex.getMessage()));
-			return;
-		}
-            LiteralExtractor.extract(mainResource, title, errors, SemanticAssetMetadata.Fields.title);
-            LiteralExtractor.extract(mainResource, description, errors, SemanticAssetMetadata.Fields.description);
-            getDistributions(errors, warnings, SemanticAssetMetadata.Fields.distributions);
-            NodeSummaryExtractor.extractRequiredNodeSummary(mainResource, rightsHolder, FOAF.name, errors, warnings,SemanticAssetMetadata.Fields.rightsHolder);
-            LiteralExtractor.extractOptional(mainResource, modified, warnings, SemanticAssetMetadata.Fields.modifiedOn);
-            NodeExtractor.requireNodes(mainResource, theme, errors, SemanticAssetMetadata.Fields.themes);
-            LiteralExtractor.extractOptional(mainResource, issued, warnings, SemanticAssetMetadata.Fields.issuedOn);
-            LiteralExtractor.extract(mainResource, versionInfo, errors, SemanticAssetMetadata.Fields.versionInfo);
-            LiteralExtractor.extractAll(mainResource, keyword, warnings, SemanticAssetMetadata.Fields.keywords);
-            NodeSummaryExtractor.maybeNodeSummaries(mainResource, conformsTo, FOAF.name, warnings, SemanticAssetMetadata.Fields.conformsTo);
-            getKeyClasses(warnings, SemanticAssetMetadata.Fields.keyClasses);
-	}
+    public void validateMetadata(List<ErrorValidatorMessage> errors,
+                                 List<WarningValidatorMessage> warnings) {
+        Resource mainResource = null;
+        try {
+            mainResource = getMainResource();
+        } catch (InvalidModelException ex) {
+            errors.add(new ErrorValidatorMessage(null, ex.getMessage()));
+            return;
+        }
+        LiteralExtractor.extract(mainResource, title, errors, SemanticAssetMetadata.Fields.title);
+        LiteralExtractor.extract(mainResource, description, errors, SemanticAssetMetadata.Fields.description);
+        getDistributions(errors, warnings, SemanticAssetMetadata.Fields.distributions);
+        NodeSummaryExtractor.extractRequiredNodeSummary(mainResource, rightsHolder, FOAF.name, errors, warnings, SemanticAssetMetadata.Fields.rightsHolder);
+        LiteralExtractor.extractOptional(mainResource, modified, warnings, SemanticAssetMetadata.Fields.modifiedOn);
+        NodeExtractor.requireNodes(mainResource, theme, errors, SemanticAssetMetadata.Fields.themes);
+        LiteralExtractor.extractOptional(mainResource, issued, warnings, SemanticAssetMetadata.Fields.issuedOn);
+        LiteralExtractor.extract(mainResource, versionInfo, errors, SemanticAssetMetadata.Fields.versionInfo);
+        LiteralExtractor.extractAll(mainResource, keyword, warnings, SemanticAssetMetadata.Fields.keywords);
+        NodeSummaryExtractor.maybeNodeSummaries(mainResource, conformsTo, FOAF.name, warnings, SemanticAssetMetadata.Fields.conformsTo);
+        getKeyClasses(warnings, SemanticAssetMetadata.Fields.keyClasses);
+    }
 
-	private List<NodeSummary> getKeyClasses() {
+    private List<NodeSummary> getKeyClasses() {
         return NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.hasKeyClass, RDFS.label);
+    }
+
+    /*
+     * validation methods
+     */
+    private List<NodeSummary> getKeyClasses(List<WarningValidatorMessage> warnings, String fieldName) {
+        return NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.hasKeyClass, RDFS.label, warnings, fieldName);
     }
 
     protected List<Distribution> getDistributions() {
         return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_JSON);
     }
-    
-    private List<NodeSummary> getKeyClasses(List<WarningValidatorMessage> warnings, String fieldName) {
-        return NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.hasKeyClass, RDFS.label, warnings, fieldName);
-    }
-    
+
+    /*
+     * validation methods
+     */
     private List<Distribution> getDistributions(List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings,  String fieldName) {
         return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_JSON, errors, warnings, fieldName);
     }
