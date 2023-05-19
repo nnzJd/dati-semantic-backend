@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import it.gov.innovazione.ndc.harvester.SemanticAssetType;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -21,6 +22,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 @Setting(settingPath = "elasticsearch-settings.json")
 @Data
 @Builder(toBuilder = true)
+@FieldNameConstants
 public class SemanticAssetMetadata {
 
     @Id
@@ -87,4 +89,8 @@ public class SemanticAssetMetadata {
     //for the searchable content in multiple fields
     @JsonIgnore
     private String searchableText;
+
+
+    @Field(type = Keyword)
+    private List<String> status;
 }

@@ -71,6 +71,7 @@ public class HarvesterService {
 
     private void cleanUpWithHarvesters(String repoUrl) {
         semanticAssetHarvesters.forEach(h -> {
+            h.getType();
             log.debug("Cleaning for {} before harvesting {}", h.getType(), repoUrl);
             h.cleanUpBeforeHarvesting(repoUrl);
 

@@ -1,12 +1,12 @@
 package it.gov.innovazione.ndc.harvester.model;
 
-import it.gov.innovazione.ndc.harvester.model.exception.InvalidModelException;
-import it.gov.innovazione.ndc.harvester.model.extractors.NodeExtractor;
-import it.gov.innovazione.ndc.harvester.model.index.Distribution;
-import it.gov.innovazione.ndc.harvester.model.index.SemanticAssetMetadata;
-import it.gov.innovazione.ndc.model.profiles.EuropePublicationVocabulary;
-import it.gov.innovazione.ndc.model.profiles.NDC;
-import lombok.extern.slf4j.Slf4j;
+import static it.gov.innovazione.ndc.harvester.SemanticAssetType.CONTROLLED_VOCABULARY;
+import static it.gov.innovazione.ndc.model.profiles.EuropePublicationVocabulary.FILE_TYPE_RDF_TURTLE;
+import static java.lang.String.format;
+import static org.apache.jena.vocabulary.DCAT.distribution;
+
+import java.util.List;
+
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -14,13 +14,13 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static it.gov.innovazione.ndc.harvester.SemanticAssetType.CONTROLLED_VOCABULARY;
-import static it.gov.innovazione.ndc.model.profiles.EuropePublicationVocabulary.FILE_TYPE_RDF_TURTLE;
-import static java.lang.String.format;
-import static org.apache.jena.vocabulary.DCAT.distribution;
+import it.gov.innovazione.ndc.harvester.model.exception.InvalidModelException;
+import it.gov.innovazione.ndc.harvester.model.index.Distribution;
+import it.gov.innovazione.ndc.harvester.model.index.SemanticAssetMetadata;
+import it.gov.innovazione.ndc.model.profiles.NDC;
+import it.gov.innovazione.ndc.validator.model.ErrorValidatorMessage;
+import it.gov.innovazione.ndc.validator.model.WarningValidatorMessage;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ControlledVocabularyModel extends BaseSemanticAssetModel {
@@ -124,7 +124,46 @@ public class ControlledVocabularyModel extends BaseSemanticAssetModel {
                 .build();
     }
 
-    protected List<Distribution> getDistributions() {
+    /*
+     * Use the same methods of extract Metadata. Instead to throw exceptions, it add the error inside the collection.
+     */
+    @Override
+    public void validateMetadata(List<ErrorValidatorMessage> errors,
+                                 List<WarningValidatorMessage> warnings) {
+        try {
+            super.validateMetadata(errors, warnings);
+        } catch (InvalidModelException ex) {
+            errors.add(new ErrorValidatorMessage(null, ex.getMessage()));
+            return;
+        }
+        getDistributions(errors, warnings, SemanticAssetMetadata.Fields.distributions);
+        getKeyConcept(errors, SemanticAssetMetadata.Fields.keyConcept);
+        getAgencyId(errors, SemanticAssetMetadata.Fields.agencyId);
+    }
+
+	protected List<Distribution> getDistributions() {
         return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_RDF_TURTLE);
     }
+	
+	private List<Distribution> getDistributions(List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings, String fieldName) {
+        return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_RDF_TURTLE, errors, warnings, fieldName);
+    }
+	
+	private String getKeyConcept(List<ErrorValidatorMessage> errors, String fieldName) {
+		try {
+			return getKeyConcept();
+		} catch (InvalidModelException e) {
+			errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
+			return null;
+		}
+	}
+	
+	private String getAgencyId(List<ErrorValidatorMessage> errors, String fieldName) {
+		try {
+			return getAgencyId();
+		} catch (InvalidModelException e) {
+			errors.add(new ErrorValidatorMessage(fieldName, e.getMessage()));
+			return null;
+		}
+	}
 }

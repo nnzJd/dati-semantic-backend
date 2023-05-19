@@ -1,5 +1,6 @@
 package it.gov.innovazione.ndc.harvester.model;
 
+import it.gov.innovazione.ndc.harvester.model.exception.InvalidModelException;
 import it.gov.innovazione.ndc.harvester.model.extractors.LiteralExtractor;
 import it.gov.innovazione.ndc.harvester.model.extractors.NodeExtractor;
 import it.gov.innovazione.ndc.harvester.model.extractors.NodeSummaryExtractor;
@@ -7,15 +8,15 @@ import it.gov.innovazione.ndc.harvester.model.index.Distribution;
 import it.gov.innovazione.ndc.harvester.model.index.NodeSummary;
 import it.gov.innovazione.ndc.harvester.model.index.SemanticAssetMetadata;
 import it.gov.innovazione.ndc.model.profiles.Admsapit;
+import it.gov.innovazione.ndc.validator.model.ErrorValidatorMessage;
+import it.gov.innovazione.ndc.validator.model.WarningValidatorMessage;
+
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.sparql.vocabulary.FOAF;
-import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDFS;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.gov.innovazione.ndc.harvester.SemanticAssetType.SCHEMA;
 import static it.gov.innovazione.ndc.model.profiles.EuropePublicationVocabulary.FILE_TYPE_JSON;
@@ -62,11 +63,45 @@ public class SchemaModel extends BaseSemanticAssetModel {
             .build();
     }
 
-    private List<NodeSummary> getKeyClasses() {
+    /*
+     * Use the same methods of extract Metadata. Instead to throw exceptions, it add the error inside the collection.
+     */
+    @Override
+	public void validateMetadata(List<ErrorValidatorMessage> errors,
+			List<WarningValidatorMessage> warnings) {
+    	    Resource mainResource = null;
+		try {
+			mainResource = getMainResource();
+		} catch (InvalidModelException ex) {
+			errors.add(new ErrorValidatorMessage(null, ex.getMessage()));
+			return;
+		}
+            LiteralExtractor.extract(mainResource, title, errors, SemanticAssetMetadata.Fields.title);
+            LiteralExtractor.extract(mainResource, description, errors, SemanticAssetMetadata.Fields.description);
+            getDistributions(errors, warnings, SemanticAssetMetadata.Fields.distributions);
+            NodeSummaryExtractor.extractRequiredNodeSummary(mainResource, rightsHolder, FOAF.name, errors, warnings,SemanticAssetMetadata.Fields.rightsHolder);
+            LiteralExtractor.extractOptional(mainResource, modified, warnings, SemanticAssetMetadata.Fields.modifiedOn);
+            NodeExtractor.requireNodes(mainResource, theme, errors, SemanticAssetMetadata.Fields.themes);
+            LiteralExtractor.extractOptional(mainResource, issued, warnings, SemanticAssetMetadata.Fields.issuedOn);
+            LiteralExtractor.extract(mainResource, versionInfo, errors, SemanticAssetMetadata.Fields.versionInfo);
+            LiteralExtractor.extractAll(mainResource, keyword, warnings, SemanticAssetMetadata.Fields.keywords);
+            NodeSummaryExtractor.maybeNodeSummaries(mainResource, conformsTo, FOAF.name, warnings, SemanticAssetMetadata.Fields.conformsTo);
+            getKeyClasses(warnings, SemanticAssetMetadata.Fields.keyClasses);
+	}
+
+	private List<NodeSummary> getKeyClasses() {
         return NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.hasKeyClass, RDFS.label);
     }
 
     protected List<Distribution> getDistributions() {
         return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_JSON);
+    }
+    
+    private List<NodeSummary> getKeyClasses(List<WarningValidatorMessage> warnings, String fieldName) {
+        return NodeSummaryExtractor.maybeNodeSummaries(getMainResource(), Admsapit.hasKeyClass, RDFS.label, warnings, fieldName);
+    }
+    
+    private List<Distribution> getDistributions(List<ErrorValidatorMessage> errors, List<WarningValidatorMessage> warnings,  String fieldName) {
+        return extractDistributionsFilteredByFormat(distribution, FILE_TYPE_JSON, errors, warnings, fieldName);
     }
 }
